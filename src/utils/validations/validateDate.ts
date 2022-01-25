@@ -1,5 +1,5 @@
 import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from "class-validator";
-import { dateRegex } from "./regex";
+import { dateRegex } from "../regex";
 import { validateInfo } from "./validateDataInfo";
 @ValidatorConstraint({name: 'dateValidation', async: false })
 export default class validateDate implements ValidatorConstraintInterface {

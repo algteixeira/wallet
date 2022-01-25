@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { Column, CreateDateColumn, Entity, PrimaryColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique } from "typeorm";
 
 @Entity('wallet')
 export class Wallet {
@@ -8,6 +8,7 @@ export class Wallet {
   @Column()
   name: string;
   @Column()
+  @Unique(['cpf'])
   cpf: string;
   @Column()
   birthdate: string;

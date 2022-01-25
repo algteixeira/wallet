@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString, MinLength, Validate, Validator } from "class-validator";
-import validateCpf from "src/utils/validateCpf";
-import validateDate from "src/utils/validateDate";
+import validateCpf from "src/utils/validations/validateCpf";
+import validateDate from "src/utils/validations/validateDate";
 
 export class CreateWalletDto {
     @IsString()

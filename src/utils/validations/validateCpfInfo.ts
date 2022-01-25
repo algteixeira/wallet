@@ -1,4 +1,4 @@
-import { enumInvalidCpf } from "./enumInvalidCpf";
+import { enumInvalidCpf } from "../enumInvalidCpf";
 import { validateDigitEleven, validateDigitTen } from "./validateDigits";
 
 const validateCpfInfo = (cpf) => {

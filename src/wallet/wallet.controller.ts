@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, HttpCode } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { GetAllWalletDto } from './dto/getAll-wallet.dto';
-import { serializeWallets } from 'src/utils/serialize/wallet';
+import { serializeV3, serializeWallets } from 'src/utils/serialize/wallet';
 
 @Controller('wallet')
 export class WalletController {
@@ -25,7 +25,7 @@ export class WalletController {
   async findOne(@Param('id') id: string) {
     try {
       const result = await this.walletService.findOne(id);
-      return result;
+      return serializeV3(result);
     } catch (error) {
       return error;
     }
@@ -38,8 +38,9 @@ export class WalletController {
   }
 
   @Delete(':id')
+  @HttpCode(204)
   async remove(@Param('id') id: string) {
-    const result = await this.walletService.remove(+id);
+    const result = await this.walletService.remove(id);
     return result;
   }
 }

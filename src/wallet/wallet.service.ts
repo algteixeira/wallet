@@ -63,7 +63,11 @@ export class WalletService {
     return `This action updates a #${id} wallet`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} wallet`;
+  async remove(id: string) {
+    const result = await this.walletRepo.delete(id);
+    if (result.affected === 0) {
+      throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
+    }
+    return {};
   }
 }

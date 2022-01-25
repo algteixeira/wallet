@@ -1,5 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { getAge } from 'src/utils/getAge';
+import { serialize } from 'src/utils/serialize/wallet';
 import { Repository } from 'typeorm';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
@@ -9,9 +11,14 @@ import { Wallet } from './entities/wallet.entity';
 export class WalletService {
   constructor(@InjectRepository(Wallet) private walletRepo: Repository<Wallet>) {}
   async create(createWalletDto: CreateWalletDto) {
+    const {birthdate} = createWalletDto;
+    const isUnderage = getAge(birthdate);
+    if (isUnderage) {
+      throw new HttpException('Wallet owner must be an adult', HttpStatus.BAD_REQUEST);
+    }
     const result = await this.walletRepo.create(createWalletDto);
     await this.walletRepo.save(result);
-    return result;
+    return serialize(result);
   }
 
   async findAll() {

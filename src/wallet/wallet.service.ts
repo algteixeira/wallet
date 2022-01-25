@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { idRegex } from 'src/utils/regex';
 import { serialize, serializeWallets } from 'src/utils/serialize/wallet';
 import { ValidateQueries } from 'src/utils/validations/validateQueries';
 import { Underage } from 'src/utils/validations/validateUnderage';
@@ -42,6 +43,9 @@ export class WalletService {
   }
 
   async findOne(id: string) {
+    if (!idRegex(id)) {
+      throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
+    }
     const result = await this.walletRepo.findOne(id);
     if (!result) {
       throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
@@ -50,10 +54,16 @@ export class WalletService {
   }
 
   update(id: number, updateWalletDto: UpdateWalletDto) {
+    if (!idRegex(id)) {
+      throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
+    }
     return `This action updates a #${id} wallet`;
   }
 
   async remove(id: string) {
+    if (!idRegex(id)) {
+      throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
+    }
     const result = await this.walletRepo.delete(id);
     if (result.affected === 0) {
       throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);

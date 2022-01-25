@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Queries } from 'src/utils/enumQueries';
-import { getAge } from 'src/utils/getAge';
 import { serialize, serializeWallets } from 'src/utils/serialize/wallet';
+import { ValidateQueries } from 'src/utils/validations/validateQueries';
+import { Underage } from 'src/utils/validations/validateUnderage';
 import { Repository } from 'typeorm';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
@@ -13,10 +13,7 @@ export class WalletService {
   constructor(@InjectRepository(Wallet) private walletRepo: Repository<Wallet>) {}
   async create(createWalletDto: CreateWalletDto) {
     const {birthdate, cpf} = createWalletDto;
-    const isUnderage = getAge(birthdate);
-    if (isUnderage) {
-      throw new HttpException('Wallet owner must be an adult', HttpStatus.BAD_REQUEST);
-    }
+    Underage(birthdate);
     const alreadyExists = await this.walletRepo.findOne({cpf});
     if (alreadyExists) {
       throw new HttpException('A wallet is already registrated with this cpf', HttpStatus.BAD_REQUEST);
@@ -27,15 +24,8 @@ export class WalletService {
   }
 
   async findAll(queries) {
-    for (const iterator of Object.keys(queries)) {
-      if (Queries.indexOf(iterator) === -1) {
-        throw new HttpException('Invalid queries', HttpStatus.BAD_REQUEST);
-      }
-    }
+    ValidateQueries(queries);
     let { limit, page } = queries;
-    if (limit < 1 || page < 1) {
-      throw new HttpException('Invalid queries', HttpStatus.BAD_REQUEST);
-    }
     delete queries['limit'];
     delete queries['page'];
     limit = limit || 10;

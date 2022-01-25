@@ -2,8 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query, HttpCode } fr
 import { WalletService } from './wallet.service';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
-import { GetAllWalletDto } from './dto/getAll-wallet.dto';
-import { serializeV3, serializeWallets } from 'src/utils/serialize/wallet';
+import { serializeV3 } from 'src/utils/serialize/wallet';
 
 @Controller('wallet')
 export class WalletController {

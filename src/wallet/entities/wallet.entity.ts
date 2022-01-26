@@ -1,5 +1,7 @@
+import { Exclude } from "class-transformer";
 import { randomUUID } from "crypto";
-import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToMany, PrimaryColumn, Unique } from "typeorm";
+import { Coin } from "./coin.entity";
 
 @Entity('wallet')
 export class Wallet {
@@ -16,6 +18,9 @@ export class Wallet {
   createdAt: Date;
   @CreateDateColumn()
   updatedAt: Date;
+  @Exclude()
+  @OneToMany(() => Coin, (coin) => coin.wallet)
+  coins: Coin[];
   constructor() {
     if (!this.id) {
       this.id = randomUUID();

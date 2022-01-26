@@ -6,26 +6,29 @@ const serialize = ({id, createdAt, updatedAt, name, cpf, birthdate}) => ({
     createdAt,
     updatedAt
 });
+const serializeCoin = ({id, coin, fullname, amount}) => ({coin, fullname, amount});
 
-const serializeV2 = ({id, createdAt, updatedAt, name, cpf, birthdate}) => ({
-    name,
-    cpf,
-    birthdate,
-    address: id
-});
-
-const serializeV3 = ({id, createdAt, updatedAt, name, cpf, birthdate}) => ({
+const serializeGetAll = ({id, createdAt, updatedAt, name, cpf, birthdate, coins}) => ({
     name,
     cpf,
     birthdate,
     address: id,
+    coins: coins.map(serializeCoin)
+});
+
+const serializeGetById = ({id, createdAt, updatedAt, name, cpf, birthdate, coins}) => ({
+    name,
+    cpf,
+    birthdate,
+    address: id,
+    coins: coins.map(serializeCoin),
     createdAt,
     updatedAt
 });
 
 const serializeWallets = ({wallets, total}) => ({
-    wallet: wallets.map(serializeV2),
+    wallet: wallets.map(serializeGetAll),
 
 });
 
-export { serialize, serializeWallets, serializeV3 };
+export { serialize, serializeWallets, serializeGetAll, serializeGetById };

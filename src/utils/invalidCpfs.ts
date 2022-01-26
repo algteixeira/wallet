@@ -1,4 +1,4 @@
-export const enumInvalidCpf = [
+export const InvalidCpfs = [
     '00000000000',
     '11111111111',
     '22222222222',

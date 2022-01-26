@@ -1,4 +1,4 @@
-import { enumInvalidCpf } from "../enumInvalidCpf";
+import { InvalidCpfs } from "../invalidCpfs";
 import { validateDigitEleven, validateDigitTen } from "./validateDigits";
 
 const validateCpfInfo = (cpf) => {
@@ -6,7 +6,7 @@ const validateCpfInfo = (cpf) => {
     if (strCPF.length !== 11) {
         return false;
     }
-    if (enumInvalidCpf.indexOf(strCPF) !== -1) {
+    if (InvalidCpfs.indexOf(strCPF) !== -1) {
         return false;
     }
     let result = validateDigitTen(strCPF);

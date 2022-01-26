@@ -1,17 +1,19 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { idRegex } from 'src/utils/regex';
-import { serialize, serializeWallets } from 'src/utils/serialize/wallet';
+import { serialize, serializeGetAll, serializeWallets } from 'src/utils/serialize/wallet';
 import { ValidateQueries } from 'src/utils/validations/validateQueries';
 import { Underage } from 'src/utils/validations/validateUnderage';
 import { Repository } from 'typeorm';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
+import { Coin } from './entities/coin.entity';
 import { Wallet } from './entities/wallet.entity';
 
 @Injectable()
 export class WalletService {
-  constructor(@InjectRepository(Wallet) private walletRepo: Repository<Wallet>) {}
+  constructor(@InjectRepository(Wallet) private walletRepo: Repository<Wallet>, 
+  @InjectRepository(Coin) private coinRepo: Repository<Coin>) {}
   async create(createWalletDto: CreateWalletDto) {
     const {birthdate, cpf} = createWalletDto;
     Underage(birthdate);
@@ -37,6 +39,7 @@ export class WalletService {
       where: queries,
       take: limit,
       skip: skip,
+      relations: ['coins']
     });
     const serializedResult = serializeWallets({wallets: result['0'], total: result['1']})
     return serializedResult;
@@ -46,18 +49,33 @@ export class WalletService {
     if (!idRegex(id)) {
       throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
     }
-    const result = await this.walletRepo.findOne(id);
+    const result = await this.walletRepo.findOne(id, {relations:['coins']});
     if (!result) {
       throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
     }
     return result;
   }
 
-  update(id: number, updateWalletDto: UpdateWalletDto) {
+  async update(id: string) { 
     if (!idRegex(id)) {
       throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
+    }    
+    let result = await this.walletRepo.findOne({id: id});
+    if (!result) {
+      throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
     }
-    return `This action updates a #${id} wallet`;
+    const coin = {
+      coin: 'BRL',
+      fullname: 'Brazilian real',
+      amount: 0.272401
+    }
+    result.updatedAt = new Date();
+    const coins = await this.coinRepo.create(coin);
+    coins.wallet = result;
+    const finale = await this.coinRepo.save(coins);
+    let retorninho = await this.walletRepo.find({relations: ['coins']});
+    
+    return retorninho;
   }
 
   async remove(id: string) {

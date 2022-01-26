@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Query, HttpCode, Put } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
-import { serializeV3 } from 'src/utils/serialize/wallet';
+import { serializeGetById } from 'src/utils/serialize/wallet';
 
 @Controller('wallet')
 export class WalletController {
@@ -24,15 +24,16 @@ export class WalletController {
   async findOne(@Param('id') id: string) {
     try {
       const result = await this.walletService.findOne(id);
-      return serializeV3(result);
+      console.log(result)
+      return serializeGetById(result);
     } catch (error) {
       return error;
     }
   }
 
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateWalletDto: UpdateWalletDto) {
-    const result = await this.walletService.update(+id, updateWalletDto);
+  @Put(':id')
+  async update(@Param('id') id: string) {
+    const result = await this.walletService.update(id);
     return result;
   }
 

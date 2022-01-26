@@ -2,7 +2,7 @@
 
 ## Features description
 
-This is the a project that i'm doing for Compasso UOL fast track program.
+This is a project that i'm doing for Compasso UOL fast track program.
 With this project you can have your own cryptocurrencies wallet where you can: Create wallets for
 your customers, list all wallets, list specific wallets using their addresses, add/remove funds to
 someone's wallet, check an address transactions, transfer funds to another person's wallet

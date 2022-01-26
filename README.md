@@ -1,30 +1,33 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo_text.svg" width="320" alt="Nest Logo" /></a>
-</p>
+# wallet
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Features description
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This is the a project that i'm doing for Compasso UOL fast track program.
+With this project you can have your own cryptocurrencies wallet where you can: Create wallets for
+your customers, list all wallets, list specific wallets using their addresses, add/remove funds to
+someone's wallet, check an address transactions, transfer funds to another person's wallet
+and delete a wallet!
 
-## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Authors
+
+- [@algteixeira](https://www.github.com/algteixeira)
+
+## Used technologies
+
+**Server:** 
+- NestJS v8.0.0
+- TypeORM v0.2.41
+- Reflect-Metadata v0.1.13
+- POSTGRES v8.7.1
+- Axios v0.25.0
+
+**Tests:**
+- Jest v27.2.5
+- Supertest v6.1.3
+
+**Client:**
+- - SwaggerUI v4.3.0
 
 ## Installation
 
@@ -58,16 +61,32 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Support
+Customize ormconfig.ts in order to adapt it to your database configuration
+Don't forget to create your own local databases!
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```typescript
+  export const Config: TypeOrmModuleOptions = {
+  type: 'postgres',
+  host: 'your_host',
+  port: 'port_where_your_db_is_running',
+  username: 'your_user',
+  password: 'your_pwd',
+  database: 'your_db',
+  entities: ["dist/src/**/entities/*.entity{.ts,.js}"],
+  autoLoadEntities: true,
+  synchronize: true,
+}
+```
 
-## Stay in touch
+...Additional info
+```bash
+  it runs at port 3000
+```
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Documentation
 
-## License
+To plot the documentation just run the following command in your browser while server is running
 
-Nest is [MIT licensed](LICENSE).
+```bash
+  http://localhost:3000/api-docs/
+```

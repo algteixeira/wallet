@@ -1,10 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { createHistogram } from 'perf_hooks';
 import { idRegex } from 'src/utils/regex';
 import { serialize, serializeGetAll, serializeWallets } from 'src/utils/serialize/wallet';
 import { ValidateQueries } from 'src/utils/validations/validateQueries';
 import { Underage } from 'src/utils/validations/validateUnderage';
 import { Repository } from 'typeorm';
+import { CoinService } from './coin.service';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { Coin } from './entities/coin.entity';
@@ -13,7 +15,8 @@ import { Wallet } from './entities/wallet.entity';
 @Injectable()
 export class WalletService {
   constructor(@InjectRepository(Wallet) private walletRepo: Repository<Wallet>, 
-  @InjectRepository(Coin) private coinRepo: Repository<Coin>) {}
+  @InjectRepository(Coin) private coinRepo: Repository<Coin>,
+  private coinService: CoinService) {}
   async create(createWalletDto: CreateWalletDto) {
     const {birthdate, cpf} = createWalletDto;
     Underage(birthdate);
@@ -56,7 +59,7 @@ export class WalletService {
     return result;
   }
 
-  async update(id: string) { 
+  async update(id: string, updateWalletDto: UpdateWalletDto[]) { 
     if (!idRegex(id)) {
       throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
     }    
@@ -64,15 +67,17 @@ export class WalletService {
     if (!result) {
       throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
     }
-    const coin = {
+    /*const coin = {
       coin: 'BRL',
       fullname: 'Brazilian real',
       amount: 0.272401
-    }
+    }*/
+    const coinsResolved = await this.coinService.getCoins(updateWalletDto);
+    console.log(coinsResolved);
     result.updatedAt = new Date();
-    const coins = await this.coinRepo.create(coin);
+    /*const coins = await this.coinRepo.create(coin);
     coins.wallet = result;
-    const finale = await this.coinRepo.save(coins);
+    const finale = await this.coinRepo.save(coins); */
     let retorninho = await this.walletRepo.find({relations: ['coins']});
     
     return retorninho;

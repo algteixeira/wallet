@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, Delete, Query, HttpCode, Put } from '@nestjs/common';
-import { WalletService } from './wallet.service';
-import { CreateWalletDto } from './dto/create-wallet.dto';
-import { UpdateWalletDto } from './dto/update-wallet.dto';
+import { WalletService } from '../services/wallet.service';
+import { CreateWalletDto } from '../dto/create-wallet.dto';
+import { UpdateWalletDto } from '../dto/update-wallet.dto';
 import { serializeGetById } from 'src/utils/serialize/wallet';
 
 @Controller('wallet')

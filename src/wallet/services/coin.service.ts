@@ -1,12 +1,11 @@
 import { BadRequestException, HttpException, HttpStatus, Inject, Injectable } from "@nestjs/common";
-import { UpdateWalletDto } from "./dto/update-wallet.dto";
+import { UpdateWalletDto } from "../dto/update-wallet.dto";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Coin } from "./entities/coin.entity";
+import { Coin } from "../entities/coin.entity";
 import { Repository } from "typeorm";
-import { Wallet } from "./entities/wallet.entity";
+import { Wallet } from "../entities/wallet.entity";
 import { firstValueFrom,  } from "rxjs";
 import { HttpService } from "@nestjs/axios";
-import { WalletService } from "./wallet.service";
 
 @Injectable()
 export class CoinService {
@@ -51,7 +50,7 @@ export class CoinService {
         return await this.setValue(existentCoin, fullname, apiPrice, index, value, wallet, quoteTo); 
     }
 
-    private async updateWallet (wallet: Wallet) {
+    private async updateWallet (wallet: Wallet) { // move it to wallet.service as soon as possible
         wallet.updatedAt = new Date();
         return await this.walletRepo.save(wallet);
     }

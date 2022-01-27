@@ -7,10 +7,10 @@ import { ValidateQueries } from 'src/utils/validations/validateQueries';
 import { Underage } from 'src/utils/validations/validateUnderage';
 import { Repository } from 'typeorm';
 import { CoinService } from './coin.service';
-import { CreateWalletDto } from './dto/create-wallet.dto';
-import { UpdateWalletDto } from './dto/update-wallet.dto';
-import { Coin } from './entities/coin.entity';
-import { Wallet } from './entities/wallet.entity';
+import { CreateWalletDto } from '../dto/create-wallet.dto';
+import { UpdateWalletDto } from '../dto/update-wallet.dto';
+import { Coin } from '../entities/coin.entity';
+import { Wallet } from '../entities/wallet.entity';
 
 @Injectable()
 export class WalletService {

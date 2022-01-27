@@ -13,7 +13,7 @@ export class CoinService {
     constructor(@InjectRepository(Wallet) private walletRepo: Repository<Wallet>,
         @InjectRepository(Coin) private coinRepo: Repository<Coin>,
     private httpService: HttpService) { }
-    async requestCoins (updateWalletDto: UpdateWalletDto[]) {
+    private async requestCoins (updateWalletDto: UpdateWalletDto[]) {
         let result = [];
         try {
             for (let i=0; i<updateWalletDto.length; i++) {
@@ -35,11 +35,11 @@ export class CoinService {
         const apiReturn = await this.requestCoins(updateWalletDto);
         for (let i=0; i<apiReturn.length; i++) {
             const operate = {updateWalletDto: updateWalletDto[i], apiReturn: apiReturn[i]};
-            const insertedCoins = await this.insertCoins(wallet, operate);
+            const insertedCoins = await this.insertionHandler(wallet, operate);
         }        
     }
 
-    async insertCoins (wallet, operate) {
+    private async insertionHandler (wallet, operate) {
         const {updateWalletDto, apiReturn} = operate;
         const {currentCoin, quoteTo } = updateWalletDto;
         let { value } = updateWalletDto;
@@ -48,6 +48,15 @@ export class CoinService {
         const apiPrice = parseFloat(apiReturn[index].high);
         const fullname = apiReturn[index].name.split(/[/]/)[1];
         const existentCoin = await this.coinRepo.findOne({coin: quoteTo, wallet});
+        return await this.setValue(existentCoin, fullname, apiPrice, index, value, wallet, quoteTo); 
+    }
+
+    private async updateWallet (wallet: Wallet) {
+        wallet.updatedAt = new Date();
+        return await this.walletRepo.save(wallet);
+    }
+
+    private async setValue (existentCoin, fullname, apiPrice, index, value, wallet, quoteTo) {
         let newValue = 0;
         if (!existentCoin) {
             if (value < 0) {
@@ -72,13 +81,6 @@ export class CoinService {
         }
         existentCoin.amount = coinPrice + (value * apiPrice);
         await this.updateWallet(wallet);
-        return await this.coinRepo.save(existentCoin);        
-
+        return await this.coinRepo.save(existentCoin);  
     }
-
-    async updateWallet (wallet: Wallet) {
-        wallet.updatedAt = new Date();
-        return await this.walletRepo.save(wallet);
-    }
-
 }

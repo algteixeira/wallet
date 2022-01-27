@@ -67,20 +67,11 @@ export class WalletService {
     if (!wallet) {
       throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
     }
-    /*const coin = {
-      coin: 'BRL',
-      fullname: 'Brazilian real',
-      amount: 0.272401
-    }*/
-    return await this.coinService.getCoins(wallet, id, updateWalletDto);
+    await this.coinService.getCoins(wallet, updateWalletDto);
+    return await this.walletRepo.findOne({id}, {
+      relations: ['coins']
+    });
     
-    //wallet.updatedAt = new Date();
-    /*const coins = await this.coinRepo.create(coin);
-    coins.wallet = result;
-    const finale = await this.coinRepo.save(coins); */
-    //let retorninho = await this.walletRepo.find({relations: ['coins']});
-    
-    //return retorninho;
   }
 
   async remove(id: string) {

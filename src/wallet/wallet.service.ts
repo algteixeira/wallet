@@ -66,7 +66,8 @@ export class WalletService {
     let wallet = await this.walletRepo.findOne({id: id});
     if (!wallet) {
       throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
-    }
+    }    
+    
     await this.coinService.getCoins(wallet, updateWalletDto);
     return await this.walletRepo.findOne({id}, {
       relations: ['coins']

@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Wallet } from "./wallet.entity";
 
 @Entity('coin')
@@ -10,7 +10,7 @@ export class Coin {
     coin: string;
     @Column()
     fullname: string;
-    @Column({type: 'decimal'})
+    @Column({type: 'numeric'})
     amount;
     @ManyToOne(() => Wallet, (wallet) => wallet.coins)
     wallet: Wallet;

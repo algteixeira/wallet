@@ -24,7 +24,6 @@ export class WalletController {
   async findOne(@Param('id') id: string) {
     try {
       const result = await this.walletService.findOne(id);
-      console.log(result)
       return serializeGetById(result);
     } catch (error) {
       return error;

@@ -33,12 +33,8 @@ export class WalletController {
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateWalletDto: UpdateWalletDto[]) {
-    try {
-      const result = await this.walletService.update(id, updateWalletDto);
-      return result;
-    } catch (error) {
-      return error;
-    }
+    const result =  await this.walletService.update(id, updateWalletDto); 
+    return result; 
   }
 
   @Delete(':id')

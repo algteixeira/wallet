@@ -63,8 +63,8 @@ export class WalletService {
     if (!idRegex(id)) {
       throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
     }    
-    let result = await this.walletRepo.findOne({id: id});
-    if (!result) {
+    let wallet = await this.walletRepo.findOne({id: id});
+    if (!wallet) {
       throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
     }
     /*const coin = {
@@ -72,15 +72,15 @@ export class WalletService {
       fullname: 'Brazilian real',
       amount: 0.272401
     }*/
-    const coinsResolved = await this.coinService.getCoins(updateWalletDto);
-    console.log(coinsResolved);
-    result.updatedAt = new Date();
+    return await this.coinService.getCoins(wallet, id, updateWalletDto);
+    
+    //wallet.updatedAt = new Date();
     /*const coins = await this.coinRepo.create(coin);
     coins.wallet = result;
     const finale = await this.coinRepo.save(coins); */
-    let retorninho = await this.walletRepo.find({relations: ['coins']});
+    //let retorninho = await this.walletRepo.find({relations: ['coins']});
     
-    return retorninho;
+    //return retorninho;
   }
 
   async remove(id: string) {

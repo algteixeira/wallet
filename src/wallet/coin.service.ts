@@ -39,52 +39,12 @@ export class CoinService {
 
     async insertCoins (wallet, operate) {
         const {updateWalletDto, apiReturn} = operate;
-        const {currentCoin, quoteTo, value} = updateWalletDto;
+        const {currentCoin, quoteTo } = updateWalletDto;
+        let { value } = updateWalletDto;
+        value = parseFloat(value);
         const index = updateWalletDto.currentCoin+updateWalletDto.quoteTo;
+        apiReturn[index].high = parseFloat(apiReturn[index].high);
         const fullname = apiReturn[index].name.split(/[/]/)[1];
-        let existentCoin = await this.coinRepo.findOne({coin: currentCoin ,wallet: wallet})
-        if (!existentCoin) {
-            if (value < 0) {
-                throw new HttpException(`You can't withdraw ${value*-1} ${currentCoin}. Insuficient funds.`, HttpStatus.BAD_REQUEST);
-            }
-            existentCoin = await this.coinRepo.findOne({coin: quoteTo, wallet});
-            // trocar o trecho abaixo pela chamada de uma função setValues que faz isso tudo
-            let newValue = 0;
-            if (!existentCoin) {
-                newValue = value * apiReturn[index].high;
-                const newCoin = this.coinRepo.create({
-                    coin: quoteTo, fullname,
-                    amount: newValue, wallet
-                });
-                return this.coinRepo.save(newCoin);
-            }
-            newValue = parseFloat(existentCoin.amount) + (value * apiReturn[index].high);
-            existentCoin.amount = newValue; 
-            return this.coinRepo.save(existentCoin);
-        }
-        if (value < 0) {
-            let subtract = (parseFloat(existentCoin.amount) - parseFloat(value));
-            if (subtract < 0) {
-                throw new HttpException(`You can't withdraw ${value*-1} ${currentCoin}.
-                 Insuficient funds.`, HttpStatus.BAD_REQUEST);
-            } // o que vem a seguir repete em relação à antes, então fazer função no utils para realiza-lo 
-            existentCoin.amount = existentCoin.amount + value;
-            await this.coinRepo.save(existentCoin);
-            let newValue = 0.
-            existentCoin = await this.coinRepo.findOne({coin: quoteTo ,wallet: wallet});
-            if (!existentCoin) {
-                newValue = value * apiReturn[index].high;
-                const newCoin = this.coinRepo.create({
-                    coin: quoteTo, fullname,
-                    amount: newValue, wallet
-                });
-                return this.coinRepo.save(newCoin);
-            }
-            newValue = parseFloat(existentCoin.amount) + (value * apiReturn[index].high);
-            existentCoin.amount = newValue;
-            return this.coinRepo.save(existentCoin);
-        }
-
 
 
     }

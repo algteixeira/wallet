@@ -10,7 +10,7 @@ export class Coin {
     coin: string;
     @Column()
     fullname: string;
-    @Column({type: 'numeric'})
+    @Column({type: 'decimal'})
     amount;
     @ManyToOne(() => Wallet, (wallet) => wallet.coins)
     wallet: Wallet;

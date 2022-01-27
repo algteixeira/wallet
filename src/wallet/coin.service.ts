@@ -1,4 +1,4 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { BadRequestException, HttpException, HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { UpdateWalletDto } from "./dto/update-wallet.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Coin } from "./entities/coin.entity";
@@ -6,10 +6,12 @@ import { Repository } from "typeorm";
 import { Wallet } from "./entities/wallet.entity";
 import { firstValueFrom,  } from "rxjs";
 import { HttpService } from "@nestjs/axios";
+import { WalletService } from "./wallet.service";
 
 @Injectable()
 export class CoinService {
-    constructor(@InjectRepository(Coin) private coinRepo: Repository<Coin>,
+    constructor(@InjectRepository(Wallet) private walletRepo: Repository<Wallet>,
+        @InjectRepository(Coin) private coinRepo: Repository<Coin>,
     private httpService: HttpService) { }
     async requestCoins (updateWalletDto: UpdateWalletDto[]) {
         let result = [];
@@ -43,10 +45,40 @@ export class CoinService {
         let { value } = updateWalletDto;
         value = parseFloat(value);
         const index = updateWalletDto.currentCoin+updateWalletDto.quoteTo;
-        apiReturn[index].high = parseFloat(apiReturn[index].high);
+        const apiPrice = parseFloat(apiReturn[index].high);
         const fullname = apiReturn[index].name.split(/[/]/)[1];
+        const existentCoin = await this.coinRepo.findOne({coin: quoteTo, wallet});
+        let newValue = 0;
+        if (!existentCoin) {
+            if (value < 0) {
+                throw new HttpException(`This wallet don't have this currency yet. Unable to withdraw funds`, HttpStatus.BAD_REQUEST);
+            }
+            newValue = value * apiPrice;
+            const newCoin = await this.coinRepo.create({coin: quoteTo, fullname, 
+                amount: newValue, wallet})
+            await this.updateWallet(wallet);
+            return await this.coinRepo.save(newCoin);            
+        }
+        const coinPrice = parseFloat(existentCoin.amount);
+        if (value < 0) {
+            value = value * -1;
+            newValue = coinPrice - (value * apiPrice);
+            if( newValue < 0 ) {
+                throw new HttpException(`Insuficient funds`, HttpStatus.BAD_REQUEST);
+            }
+            existentCoin.amount = newValue;
+            await this.updateWallet(wallet);
+            return await this.coinRepo.save(existentCoin);
+        }
+        existentCoin.amount = coinPrice + (value * apiPrice);
+        await this.updateWallet(wallet);
+        return await this.coinRepo.save(existentCoin);        
 
+    }
 
+    async updateWallet (wallet: Wallet) {
+        wallet.updatedAt = new Date();
+        return await this.walletRepo.save(wallet);
     }
 
 }

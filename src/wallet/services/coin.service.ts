@@ -51,21 +51,21 @@ export class CoinService {
         return await this.setValue(existentCoin, fullname, apiPrice, value, wallet, quoteTo); 
     }
 
-    private async setValue (existentCoin: Coin, fullname: string, apiPrice: number, value: number, wallet: Wallet, quoteTo: string) {
+    private async setNewCoinValue(value, apiPrice, quoteTo, fullname, wallet) {
         let newValue = 0;
-
-        if (!existentCoin) {   // transform this if content into a setNewCoinValue() function
-            if (value < 0) {
-                throw new HttpException(`This wallet don't have this currency yet. Unable to withdraw funds`, HttpStatus.BAD_REQUEST);
-            }
-            newValue = value * apiPrice;
-            const newCoin = await this.coinRepo.create({coin: quoteTo, fullname, 
-                amount: newValue, wallet})
-            await this.transactionService.createTransaction(apiPrice, 
-                {sendTo: wallet.id, receiveFrom: wallet.id, coin: newCoin, value: newValue});
-            return await this.coinRepo.save(newCoin);            
+        if (value < 0) {
+            throw new HttpException(`This wallet don't have this currency yet. Unable to withdraw funds`, HttpStatus.BAD_REQUEST);
         }
-        // transform the code below into a setExistentCoinValue() function
+        newValue = value * apiPrice;
+        const newCoin = await this.coinRepo.create({coin: quoteTo, fullname, 
+            amount: newValue, wallet})
+        await this.coinRepo.save(newCoin); 
+        return this.transactionService.createTransaction(apiPrice, 
+            {sendTo: wallet.id, receiveFrom: wallet.id, coin: newCoin, value: newValue});
+    }
+
+    private async setExistentCoinValue(existentCoin, value, apiPrice, wallet) {
+        let newValue = 0;
         const coinPrice = parseFloat(existentCoin.amount);
         if (value < 0) {
             value = value * -1;
@@ -76,14 +76,23 @@ export class CoinService {
             }
 
             existentCoin.amount = newValue;
-            await this.transactionService.createTransaction(apiPrice, 
+            await this.coinRepo.save(existentCoin);
+            return await this.transactionService.createTransaction(apiPrice, 
                 {sendTo: wallet.id, receiveFrom: wallet.id, coin: existentCoin, value: (value * apiPrice)});
-            return await this.coinRepo.save(existentCoin);
         }
 
         existentCoin.amount = coinPrice + (value * apiPrice);
-        await this.transactionService.createTransaction(apiPrice, 
+        await this.coinRepo.save(existentCoin);
+        return await this.transactionService.createTransaction(apiPrice, 
             {sendTo: wallet.id, receiveFrom: wallet.id, coin: existentCoin, value: (value * apiPrice)});
-        return await this.coinRepo.save(existentCoin);  
+    }
+
+    private async setValue (existentCoin: Coin, fullname: string, apiPrice: number, value: number, wallet: Wallet, quoteTo: string) {
+        let newValue = 0;
+
+        if (!existentCoin) {
+            return await this.setNewCoinValue(value, apiPrice, quoteTo, fullname, wallet);
+        }
+        return await this.setExistentCoinValue(existentCoin, value, apiPrice, wallet);  
     }
 }

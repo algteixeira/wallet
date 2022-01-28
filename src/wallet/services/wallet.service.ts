@@ -1,8 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createHistogram } from 'perf_hooks';
 import { idRegex } from 'src/utils/regex';
-import { serialize, serializeGetAll, serializeWallets } from 'src/utils/serialize/wallet';
+import { serialize, serializeWallets } from 'src/utils/serialize/wallet';
 import { ValidateQueries } from 'src/utils/validations/validateQueries';
 import { Underage } from 'src/utils/validations/validateUnderage';
 import { Repository } from 'typeorm';
@@ -14,8 +13,7 @@ import { Wallet } from '../entities/wallet.entity';
 
 @Injectable()
 export class WalletService {
-  constructor(@InjectRepository(Wallet) private walletRepo: Repository<Wallet>, 
-  @InjectRepository(Coin) private coinRepo: Repository<Coin>,
+  constructor(@InjectRepository(Wallet) private walletRepo: Repository<Wallet>,
   private coinService: CoinService) {}
   async create(createWalletDto: CreateWalletDto) {
     const {birthdate, cpf} = createWalletDto;
@@ -71,9 +69,12 @@ export class WalletService {
     }    
     
     await this.coinService.getCoins(wallet, updateWalletDto);
-    return await this.walletRepo.findOne({id}, {
-      relations: ['coins']
-    });    
+    return await this.updateWallet(wallet);
+  }
+
+  private async updateWallet (wallet: Wallet) { 
+    wallet.updatedAt = new Date();
+    return await this.walletRepo.save(wallet);
   }
 
   async remove(id: string) {

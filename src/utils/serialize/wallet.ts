@@ -6,7 +6,18 @@ const serialize = ({id, createdAt, updatedAt, name, cpf, birthdate}) => ({
     createdAt,
     updatedAt
 });
-const serializeCoin = ({id, coin, fullname, amount}) => ({coin, fullname, amount});
+
+const serializeTransaction = ({id, datetime, value, sendTo, receiveFrom, currentCotation}) => ({
+    value,
+    datetime,
+    sendTo,
+    receiveFrom,
+    currentCotation
+});
+
+const serializeCoin = ({id, coin, fullname, amount, transactions}) => (
+    {coin, fullname, amount, transactions: transactions.map(serializeTransaction)}
+);
 
 const serializeGetAll = ({id, createdAt, updatedAt, name, cpf, birthdate, coins}) => ({
     name,

@@ -18,7 +18,6 @@ export class Wallet {
   createdAt: Date;
   @CreateDateColumn()
   updatedAt: Date;
-  @Exclude()
   @OneToMany(() => Coin, (coin) => coin.wallet)
   coins: Coin[];
   constructor() {

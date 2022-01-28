@@ -6,10 +6,12 @@ import { Wallet } from './entities/wallet.entity';
 import { Coin } from './entities/coin.entity';
 import { CoinService } from './services/coin.service';
 import { HttpModule, HttpService } from '@nestjs/axios';
+import { Transaction } from './entities/transaction.entity';
+import { TransactionService } from './services/transactions.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Wallet, Coin]), HttpModule],
+  imports: [TypeOrmModule.forFeature([Wallet, Coin, Transaction]), HttpModule],
   controllers: [WalletController],
-  providers: [WalletService, CoinService]
+  providers: [WalletService, CoinService, TransactionService]
 })
 export class WalletModule {}

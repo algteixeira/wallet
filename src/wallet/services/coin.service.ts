@@ -6,11 +6,13 @@ import { Repository } from "typeorm";
 import { Wallet } from "../entities/wallet.entity";
 import { firstValueFrom,  } from "rxjs";
 import { HttpService } from "@nestjs/axios";
+import { TransactionService } from "./transactions.service";
 
 @Injectable()
 export class CoinService {
     constructor(@InjectRepository(Wallet) private walletRepo: Repository<Wallet>,
         @InjectRepository(Coin) private coinRepo: Repository<Coin>,
+        private transactionService: TransactionService,
     private httpService: HttpService) { }
     private async requestCoins (updateWalletDto: UpdateWalletDto[]) {
         let result = [];
@@ -34,20 +36,20 @@ export class CoinService {
         const apiReturn = await this.requestCoins(updateWalletDto);
         for (let i=0; i<apiReturn.length; i++) {
             const operate = {updateWalletDto: updateWalletDto[i], apiReturn: apiReturn[i]};
-            const insertedCoins = await this.insertionHandler(wallet, operate);
+            await this.insertionHandler(wallet, operate);
         }        
     }
 
     private async insertionHandler (wallet, operate) {
         const {updateWalletDto, apiReturn} = operate;
-        const {currentCoin, quoteTo } = updateWalletDto;
+        const { quoteTo } = updateWalletDto;
         let { value } = updateWalletDto;
         value = parseFloat(value);
         const index = updateWalletDto.currentCoin+updateWalletDto.quoteTo;
         const apiPrice = parseFloat(apiReturn[index].high);
         const fullname = apiReturn[index].name.split(/[/]/)[1];
         const existentCoin = await this.coinRepo.findOne({coin: quoteTo, wallet});
-        return await this.setValue(existentCoin, fullname, apiPrice, index, value, wallet, quoteTo); 
+        return await this.setValue(existentCoin, fullname, apiPrice, value, wallet, quoteTo); 
     }
 
     private async updateWallet (wallet: Wallet) { // move it to wallet.service as soon as possible
@@ -55,7 +57,7 @@ export class CoinService {
         return await this.walletRepo.save(wallet);
     }
 
-    private async setValue (existentCoin, fullname, apiPrice, index, value, wallet, quoteTo) {
+    private async setValue (existentCoin: Coin, fullname: string, apiPrice: number, value: number, wallet: Wallet, quoteTo: string) {
         let newValue = 0;
         if (!existentCoin) {
             if (value < 0) {
@@ -65,6 +67,8 @@ export class CoinService {
             const newCoin = await this.coinRepo.create({coin: quoteTo, fullname, 
                 amount: newValue, wallet})
             await this.updateWallet(wallet);
+            await this.transactionService.createTransaction(apiPrice, 
+                {sendTo: wallet.id, receiveFrom: wallet.id, coin: newCoin, value: newValue});
             return await this.coinRepo.save(newCoin);            
         }
         const coinPrice = parseFloat(existentCoin.amount);
@@ -76,10 +80,14 @@ export class CoinService {
             }
             existentCoin.amount = newValue;
             await this.updateWallet(wallet);
+            await this.transactionService.createTransaction(apiPrice, 
+                {sendTo: wallet.id, receiveFrom: wallet.id, coin: existentCoin, value: (value * apiPrice)});
             return await this.coinRepo.save(existentCoin);
         }
         existentCoin.amount = coinPrice + (value * apiPrice);
         await this.updateWallet(wallet);
+        await this.transactionService.createTransaction(apiPrice, 
+            {sendTo: wallet.id, receiveFrom: wallet.id, coin: existentCoin, value: (value * apiPrice)});
         return await this.coinRepo.save(existentCoin);  
     }
 }

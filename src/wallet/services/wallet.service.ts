@@ -52,7 +52,9 @@ export class WalletService {
     if (!idRegex(id)) {
       throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
     }
-    const result = await this.walletRepo.findOne(id, {relations:['coins']});
+    const result = await this.walletRepo.findOne({id}, {
+      relations: ['coins']
+    });
     if (!result) {
       throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
     }
@@ -71,8 +73,7 @@ export class WalletService {
     await this.coinService.getCoins(wallet, updateWalletDto);
     return await this.walletRepo.findOne({id}, {
       relations: ['coins']
-    });
-    
+    });    
   }
 
   async remove(id: string) {

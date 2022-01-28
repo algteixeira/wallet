@@ -3,6 +3,7 @@ import { WalletService } from '../services/wallet.service';
 import { CreateWalletDto } from '../dto/create-wallet.dto';
 import { UpdateWalletDto } from '../dto/update-wallet.dto';
 import { serializeGetById } from 'src/utils/serialize/wallet';
+import { CreateTransactionDto } from '../dto/create-transaction.dto';
 
 @Controller('wallet')
 export class WalletController {
@@ -11,6 +12,12 @@ export class WalletController {
   @Post()
   async create(@Body() createWalletDto: CreateWalletDto) {
     const result = await this.walletService.create(createWalletDto);
+    return result;
+  }
+
+  @Post(':id/transaction')
+  async createTransaction(@Param('id') id: string ,@Body() createTransactionDto: CreateTransactionDto) {
+    const result = await this.walletService.createTransaction(id, createTransactionDto);
     return result;
   }
 

@@ -87,4 +87,29 @@ export class WalletService {
     }
     return {};
   }
+
+  async createTransaction(id, createTransactionDto) {
+    await this.checkWalletProblems(id, createTransactionDto);
+    return await this.coinService.transactionHandler(id, createTransactionDto);
+  }
+
+  async checkWalletProblems (id, createTransactionDto) {
+    if (!idRegex(id)) {
+      throw new HttpException(`Invalid ID format for ${id}`, HttpStatus.BAD_REQUEST);
+    }
+    if (!idRegex(createTransactionDto.receiverAddress)) {
+      throw new HttpException(`Invalid ID format for ${createTransactionDto.receiverAddress}`, HttpStatus.BAD_REQUEST);
+    }
+    let result = await this.walletRepo.findOne({id});
+    if (!result) {
+      throw new HttpException(`There's no wallet with id: ${id}`, HttpStatus.NOT_FOUND);
+    }
+    result = await this.walletRepo.findOne({id: createTransactionDto.receiverAddress});
+    if (!result) {
+      throw new HttpException(`There's no wallet with id: ${createTransactionDto.receiverAddress}`, HttpStatus.NOT_FOUND);
+    }
+    if (id === createTransactionDto.receiverAddress) {
+      throw new HttpException(`Unable to transfer funds to your own wallet`, HttpStatus.BAD_REQUEST);
+    }
+  }
 }

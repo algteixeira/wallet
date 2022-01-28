@@ -11,13 +11,14 @@ import { TransactionService } from "./transactions.service";
 @Injectable()
 export class CoinService {
     constructor(@InjectRepository(Coin) private coinRepo: Repository<Coin>,
+    @InjectRepository(Wallet) private walletRepo: Repository<Wallet>,
         private transactionService: TransactionService,
     private httpService: HttpService) { }
-    private async requestCoins (updateWalletDto: UpdateWalletDto[]) {
+    private async requestCoins (payload) {
         let result = [];
         try {
-            for (let i=0; i<updateWalletDto.length; i++) {
-                let { quoteTo, currentCoin } = updateWalletDto[i];
+            for (let i=0; i<payload.length; i++) {
+                let { quoteTo, currentCoin } = payload[i];
                 const { data } = await firstValueFrom(
                     this.httpService.get(`https://economia.awesomeapi.com.br/json/last/${currentCoin}-${quoteTo}`)
                 )
@@ -27,6 +28,47 @@ export class CoinService {
         } catch (error) {
             throw new HttpException(`There are invalid currencies on your request`, HttpStatus.BAD_REQUEST);
         }
+    }
+
+    async createTransaction (coin, value, currentCotation, id, receiverAddress) {
+        // otimizar isso passando de função em função as duas carteiras buscadas lá no wallet service
+        console.log(coin, value, currentCotation);
+        console.log(id, receiverAddress);
+        const transferValue = value * currentCotation;
+        const receiver = await this.walletRepo.findOne({id: receiverAddress});
+        const wallet = await this.walletRepo.findOne({id}); 
+        let result = await this.coinRepo.findOne({coin, wallet})
+        if (!result) {
+            throw new HttpException(`User ${wallet.name} don't have this coin yet`, HttpStatus.NOT_FOUND);
+        }
+        const newValue = parseFloat(result.amount) - transferValue; 
+        if (newValue < 0) {
+            throw new HttpException(`Insuficient funds!`, HttpStatus.BAD_REQUEST);
+        }
+        result.amount = newValue;
+        await this.coinRepo.save(result);
+        console.log(parseFloat(result.amount), transferValue);
+        
+        // [X] primeiro confere se a wallet tem essa coin, se não tiver, throw error
+        // [X] não pode permitir transferir o valor se não tiver o suficiente
+        // [] confere se a coin já existe no receiverAddress, se não existir, cria e insere o
+        //      valor retirado da outra
+        // [] se já existir, só soma no amount dela o valor transferido
+        // [] vai utilizar o this.transactionService.createTransaction() tanto pra 
+        // [] sinalizar a transferência saindo de 1 (com valor negativo)
+        // [] e dinheiro entrando pro outro (valor positivo)
+    }
+
+    async transactionHandler (id, createTransactionDto) {
+        const { receiverAddress } = createTransactionDto;
+        delete createTransactionDto['receiverAddress'];
+        const result = await this.requestCoins([createTransactionDto]);
+        const index = createTransactionDto.currentCoin+createTransactionDto.quoteTo;
+        const {value, quoteTo} = createTransactionDto;
+
+        const coinName = result[0][index].name.split(/[/]/)[1];
+        const currentCotation = result[0][index].high;
+        await this.createTransaction(quoteTo, value, currentCotation, id, receiverAddress);
     }
 
     

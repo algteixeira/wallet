@@ -74,7 +74,6 @@ export class WalletService {
         if (!wallet) {
             throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
         }
-
         await this.coinService.getCoins(wallet, updateWalletDto);
         return await this.updateWallet(wallet);
     }
@@ -97,7 +96,7 @@ export class WalletService {
 
     async createTransaction(id, createTransactionDto) {
         const { receiverAddress } = createTransactionDto;
-        await this.checkWalletProblems(id, createTransactionDto);
+        await this.checkWalletProblems({ id, receiverAddress });
         await this.coinService.transactionHandler(id, createTransactionDto);
         const sender = await this.walletRepo.findOne({ id });
         await this.updateWallet(sender);
@@ -106,8 +105,7 @@ export class WalletService {
     }
 
     async getTransactions(id) {
-        const createTransactionDto = false;
-        await this.checkWalletProblems(id, createTransactionDto);
+        await this.checkWalletProblems({ id });
         const coins = await this.coinRepo.find({ wallet: id });
         const result = [];
         for (let i = 0; i < coins.length; i++) {
@@ -116,31 +114,19 @@ export class WalletService {
         return result;
     }
 
-    async checkWalletProblems(id, createTransactionDto) {
-        if (!idRegex(id)) {
-            throw new HttpException(`Invalid ID format for ${id}`, HttpStatus.BAD_REQUEST);
-        }
-        if (!idRegex(createTransactionDto.receiverAddress) && createTransactionDto) {
-            throw new HttpException(
-                `Invalid ID format for ${createTransactionDto.receiverAddress}`,
-                HttpStatus.BAD_REQUEST
-            );
-        }
-        let result = await this.walletRepo.findOne({ id });
-        if (!result) {
-            throw new HttpException(`There's no wallet with id: ${id}`, HttpStatus.NOT_FOUND);
-        }
-        if (createTransactionDto) {
-            result = await this.walletRepo.findOne({ id: createTransactionDto.receiverAddress });
+    async checkWalletProblems(payload) {
+        for (let i = 0; i < Object.values(payload).length; i++) {
+            const id = String(Object.values(payload)[i]);
+            if (!idRegex(id)) {
+                throw new HttpException(`Invalid ID format for ${id}`, HttpStatus.BAD_REQUEST);
+            }
+            const result = await this.walletRepo.findOne({ id });
             if (!result) {
-                throw new HttpException(
-                    `There's no wallet with id: ${createTransactionDto.receiverAddress}`,
-                    HttpStatus.NOT_FOUND
-                );
+                throw new HttpException(`There's no wallet with id: ${id}`, HttpStatus.NOT_FOUND);
             }
-            if (id === createTransactionDto.receiverAddress) {
-                throw new HttpException(`Unable to transfer funds to your own wallet`, HttpStatus.BAD_REQUEST);
-            }
+        }
+        if (Object.values(payload)[0] === Object.values(payload)[1]) {
+            throw new HttpException(`Unable to transfer funds to your own wallet`, HttpStatus.BAD_REQUEST);
         }
     }
 }

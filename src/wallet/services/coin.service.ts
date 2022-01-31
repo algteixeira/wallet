@@ -30,33 +30,44 @@ export class CoinService {
         }
     }
 
-    async createTransaction (coin, value, currentCotation, id, receiverAddress) {
-        // otimizar isso passando de função em função as duas carteiras buscadas lá no wallet service
-        console.log(coin, value, currentCotation);
-        console.log(id, receiverAddress);
+    async createTransaction (coin, value, currentCotation, id, receiverAddress, coinName) {
         const transferValue = value * currentCotation;
         const receiver = await this.walletRepo.findOne({id: receiverAddress});
         const wallet = await this.walletRepo.findOne({id}); 
+        await this.senderHandler(coin, wallet, transferValue, currentCotation, receiverAddress, id);
+        return await this.receiverHandler(coin, receiver, coinName, transferValue, currentCotation,
+            receiverAddress, id);
+    }
+
+    async senderHandler (coin, wallet, transferValue, currentCotation, receiverAddress, id) {
         let result = await this.coinRepo.findOne({coin, wallet})
         if (!result) {
             throw new HttpException(`User ${wallet.name} don't have this coin yet`, HttpStatus.NOT_FOUND);
         }
-        const newValue = parseFloat(result.amount) - transferValue; 
+        let newValue = parseFloat(result.amount) - transferValue; 
         if (newValue < 0) {
             throw new HttpException(`Insuficient funds!`, HttpStatus.BAD_REQUEST);
         }
         result.amount = newValue;
         await this.coinRepo.save(result);
-        console.log(parseFloat(result.amount), transferValue);
-        
-        // [X] primeiro confere se a wallet tem essa coin, se não tiver, throw error
-        // [X] não pode permitir transferir o valor se não tiver o suficiente
-        // [] confere se a coin já existe no receiverAddress, se não existir, cria e insere o
-        //      valor retirado da outra
-        // [] se já existir, só soma no amount dela o valor transferido
-        // [] vai utilizar o this.transactionService.createTransaction() tanto pra 
-        // [] sinalizar a transferência saindo de 1 (com valor negativo)
-        // [] e dinheiro entrando pro outro (valor positivo)
+        return await this.transactionService.createTransaction(currentCotation, {sendTo: receiverAddress, receiveFrom: id,
+            coin: result, value: (transferValue * -1)})
+    }
+
+    async receiverHandler(coin, receiver, coinName, transferValue, currentCotation, receiverAddress, id) {
+        let result = await this.coinRepo.findOne({coin, wallet: receiver});
+        result = await this.coinRepo.findOne({coin, wallet: receiver});
+        if (!result) {
+            result = await this.coinRepo.create({coin: coin, wallet: receiver, fullname: coinName});
+            result.amount = transferValue;
+            result = await this.coinRepo.save(result);
+            await this.transactionService.createTransaction(currentCotation, {sendTo: receiverAddress, receiveFrom: id,
+                coin: result, value: transferValue})
+        }
+        result.amount = parseFloat(result.amount) + transferValue;
+        await this.coinRepo.save(result);
+        return await this.transactionService.createTransaction(currentCotation, {sendTo: receiverAddress, receiveFrom: id,
+             coin: result, value: transferValue})
     }
 
     async transactionHandler (id, createTransactionDto) {
@@ -68,7 +79,7 @@ export class CoinService {
 
         const coinName = result[0][index].name.split(/[/]/)[1];
         const currentCotation = result[0][index].high;
-        await this.createTransaction(quoteTo, value, currentCotation, id, receiverAddress);
+        await this.createTransaction(quoteTo, value, currentCotation, id, receiverAddress, coinName);
     }
 
     

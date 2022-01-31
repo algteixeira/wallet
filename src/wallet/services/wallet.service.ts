@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { idRegex } from 'src/utils/regex';
-import { serialize, serializeWallets } from 'src/utils/serialize/wallet';
+import { serialize, serializeGetTransactions, serializeWallets } from 'src/utils/serialize/wallet';
 import { ValidateQueries } from 'src/utils/validations/validateQueries';
 import { Underage } from 'src/utils/validations/validateUnderage';
 import { Repository } from 'typeorm';
@@ -11,9 +11,11 @@ import { UpdateWalletDto } from '../dto/update-wallet.dto';
 import { Coin } from '../entities/coin.entity';
 import { Wallet } from '../entities/wallet.entity';
 
+
 @Injectable()
 export class WalletService {
   constructor(@InjectRepository(Wallet) private walletRepo: Repository<Wallet>,
+  @InjectRepository(Coin) private coinRepo: Repository<Coin>,
   private coinService: CoinService) {}
   async create(createWalletDto: CreateWalletDto) {
     const {birthdate, cpf} = createWalletDto;
@@ -89,27 +91,46 @@ export class WalletService {
   }
 
   async createTransaction(id, createTransactionDto) {
+    const {receiverAddress} = createTransactionDto;
     await this.checkWalletProblems(id, createTransactionDto);
-    return await this.coinService.transactionHandler(id, createTransactionDto);
+    await this.coinService.transactionHandler(id, createTransactionDto);
+    let sender = await this.walletRepo.findOne({id});
+    await this.updateWallet(sender);
+    let receiver = await this.walletRepo.findOne({id: receiverAddress});
+    return await this.updateWallet(receiver);
+  }
+
+  async getTransactions (id) {
+    const createTransactionDto=false;
+    await this.checkWalletProblems(id, createTransactionDto);
+    const coins = await this.coinRepo.find({wallet: id}); 
+    let result = [];
+    for (let i = 0; i < coins.length; i++) {
+      result.push(serializeGetTransactions(coins[i]));
+    }    
+    return result;
+    
   }
 
   async checkWalletProblems (id, createTransactionDto) {
     if (!idRegex(id)) {
       throw new HttpException(`Invalid ID format for ${id}`, HttpStatus.BAD_REQUEST);
     }
-    if (!idRegex(createTransactionDto.receiverAddress)) {
+    if (!idRegex(createTransactionDto.receiverAddress) && createTransactionDto) {
       throw new HttpException(`Invalid ID format for ${createTransactionDto.receiverAddress}`, HttpStatus.BAD_REQUEST);
     }
     let result = await this.walletRepo.findOne({id});
     if (!result) {
       throw new HttpException(`There's no wallet with id: ${id}`, HttpStatus.NOT_FOUND);
     }
-    result = await this.walletRepo.findOne({id: createTransactionDto.receiverAddress});
-    if (!result) {
-      throw new HttpException(`There's no wallet with id: ${createTransactionDto.receiverAddress}`, HttpStatus.NOT_FOUND);
-    }
-    if (id === createTransactionDto.receiverAddress) {
-      throw new HttpException(`Unable to transfer funds to your own wallet`, HttpStatus.BAD_REQUEST);
+    if (createTransactionDto) {
+      result = await this.walletRepo.findOne({id: createTransactionDto.receiverAddress});
+      if (!result) {
+        throw new HttpException(`There's no wallet with id: ${createTransactionDto.receiverAddress}`, HttpStatus.NOT_FOUND);
+      }
+      if (id === createTransactionDto.receiverAddress) {
+        throw new HttpException(`Unable to transfer funds to your own wallet`, HttpStatus.BAD_REQUEST);
+      }
     }
   }
 }

@@ -21,6 +21,12 @@ export class WalletController {
     return result;
   }
 
+  @Get(':id/transaction')
+  async getTransactions(@Param('id') id: string) {
+    const result = await this.walletService.getTransactions(id);
+    return result;
+  }
+
   @Get()
   async findAll(@Query() queries) {
     const result = await this.walletService.findAll(queries);

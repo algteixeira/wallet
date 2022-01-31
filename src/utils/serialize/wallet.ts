@@ -1,3 +1,5 @@
+import { Wallet } from "src/wallet/entities/wallet.entity";
+
 const serialize = ({id, createdAt, updatedAt, name, cpf, birthdate}) => ({
     address : id,
     name,
@@ -24,7 +26,9 @@ const serializeGetAll = ({id, createdAt, updatedAt, name, cpf, birthdate, coins}
     cpf,
     birthdate,
     address: id,
-    coins: coins.map(serializeCoin)
+    coins: coins.map(serializeCoin),
+    createdAt,
+    updatedAt
 });
 
 const serializeGetById = ({id, createdAt, updatedAt, name, cpf, birthdate, coins}) => ({
@@ -42,4 +46,9 @@ const serializeWallets = ({wallets, total}) => ({
 
 });
 
-export { serialize, serializeWallets, serializeGetAll, serializeGetById };
+const serializeGetTransactions = ({id, coin, fullname, amount , transactions}) => ({
+    coin,
+    transactions: transactions.map(serializeTransaction)
+})
+
+export { serialize, serializeWallets, serializeGetAll, serializeGetById, serializeGetTransactions };

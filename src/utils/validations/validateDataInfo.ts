@@ -1,4 +1,4 @@
-import * as moment from "moment";
+import * as moment from 'moment';
 
 const validateInfo = (date) => {
     date = moment(date, 'DD/MM/YYYY').format('DD/MM/YYYY');
@@ -10,8 +10,6 @@ const validateInfo = (date) => {
         return false;
     }
     return true;
-    
 };
 
 export { validateInfo };
-

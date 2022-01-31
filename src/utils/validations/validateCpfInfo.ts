@@ -1,5 +1,5 @@
-import { InvalidCpfs } from "../invalidCpfs";
-import { validateDigitEleven, validateDigitTen } from "./validateDigits";
+import { InvalidCpfs } from '../invalidCpfs';
+import { validateDigitEleven, validateDigitTen } from './validateDigits';
 
 const validateCpfInfo = (cpf) => {
     const strCPF = String(cpf).replace(/[^\d]/g, '');

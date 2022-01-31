@@ -1,7 +1,5 @@
-import { Wallet } from "src/wallet/entities/wallet.entity";
-
-const serialize = ({id, createdAt, updatedAt, name, cpf, birthdate}) => ({
-    address : id,
+const serialize = ({ id, createdAt, updatedAt, name, cpf, birthdate }) => ({
+    address: id,
     name,
     cpf,
     birthdate,
@@ -9,7 +7,7 @@ const serialize = ({id, createdAt, updatedAt, name, cpf, birthdate}) => ({
     updatedAt
 });
 
-const serializeTransaction = ({id, datetime, value, sendTo, receiveFrom, currentCotation}) => ({
+const serializeTransaction = ({ id, datetime, value, sendTo, receiveFrom, currentCotation }) => ({
     value,
     datetime,
     sendTo,
@@ -17,11 +15,14 @@ const serializeTransaction = ({id, datetime, value, sendTo, receiveFrom, current
     currentCotation
 });
 
-const serializeCoin = ({id, coin, fullname, amount, transactions}) => (
-    {coin, fullname, amount, transactions: transactions.map(serializeTransaction)}
-);
+const serializeCoin = ({ id, coin, fullname, amount, transactions }) => ({
+    coin,
+    fullname,
+    amount,
+    transactions: transactions.map(serializeTransaction)
+});
 
-const serializeGetAll = ({id, createdAt, updatedAt, name, cpf, birthdate, coins}) => ({
+const serializeGetAll = ({ id, createdAt, updatedAt, name, cpf, birthdate, coins }) => ({
     name,
     cpf,
     birthdate,
@@ -31,7 +32,7 @@ const serializeGetAll = ({id, createdAt, updatedAt, name, cpf, birthdate, coins}
     updatedAt
 });
 
-const serializeGetById = ({id, createdAt, updatedAt, name, cpf, birthdate, coins}) => ({
+const serializeGetById = ({ id, createdAt, updatedAt, name, cpf, birthdate, coins }) => ({
     name,
     cpf,
     birthdate,
@@ -41,14 +42,13 @@ const serializeGetById = ({id, createdAt, updatedAt, name, cpf, birthdate, coins
     updatedAt
 });
 
-const serializeWallets = ({wallets, total}) => ({
-    wallet: wallets.map(serializeGetAll),
-
+const serializeWallets = ({ wallets, total }) => ({
+    wallet: wallets.map(serializeGetAll)
 });
 
-const serializeGetTransactions = ({id, coin, fullname, amount , transactions}) => ({
+const serializeGetTransactions = ({ id, coin, fullname, amount, transactions }) => ({
     coin,
     transactions: transactions.map(serializeTransaction)
-})
+});
 
 export { serialize, serializeWallets, serializeGetAll, serializeGetById, serializeGetTransactions };

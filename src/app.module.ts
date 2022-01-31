@@ -6,8 +6,8 @@ import { AppService } from './app.service';
 import { WalletModule } from './wallet/wallet.module';
 
 @Module({
-  imports: [WalletModule, TypeOrmModule.forRoot(Config)],
-  controllers: [AppController],
-  providers: [AppService],
+    imports: [WalletModule, TypeOrmModule.forRoot(Config)],
+    controllers: [AppController],
+    providers: [AppService]
 })
 export class AppModule {}

@@ -1,0 +1,187 @@
+{
+	"info": {
+		"_postman_id": "b4282c60-a4b3-4244-95c8-f4201a605cec",
+		"name": "wallet",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get All",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/api/v1/wallet/",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"v1",
+						"wallet",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Wallet by id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/api/v1/wallet/1e9dd25b-37d8-4c08-8678-5a50cc58cee5",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"v1",
+						"wallet",
+						"1e9dd25b-37d8-4c08-8678-5a50cc58cee5"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET transactions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/api/v1/wallet/1e9dd25b-37d8-4c08-8678-5a50cc58cee5/transaction/?coin=BRL",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"v1",
+						"wallet",
+						"1e9dd25b-37d8-4c08-8678-5a50cc58cee5",
+						"transaction",
+						""
+					],
+					"query": [
+						{
+							"key": "coin",
+							"value": "BRL"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "new Wallet",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"bullet terceiro\",\r\n    \"cpf\": \"037.626.340-76\",\r\n    \"birthdate\": \"30/10/2001\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/api/v1/wallet",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"v1",
+						"wallet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add/Remove funds",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[{\r\n    \"quoteTo\": \"BRL\",\r\n    \"currentCoin\": \"GBP\",\r\n    \"value\": \"50\"\r\n}\r\n]\r\n\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/api/v1/wallet/1e9dd25b-37d8-4c08-8678-5a50cc58cee5",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"v1",
+						"wallet",
+						"1e9dd25b-37d8-4c08-8678-5a50cc58cee5"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create a transaction",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\"receiverAddress\":\"123e4567-e89b-12d3-a456-42661417401233\",\r\n\"quoteTo\": \"USD\",\r\n\"currentCoin\": \"BTC\",\r\n\"value\": 0.12210\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/wallet/19e257e0-481b-488b-844e-fe5249ca1933/transaction",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"wallet",
+						"19e257e0-481b-488b-844e-fe5249ca1933",
+						"transaction"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete wallet",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/wallet/98cc2a38-4b55-40b8-ba17-cb45553adbfd",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"wallet",
+						"98cc2a38-4b55-40b8-ba17-cb45553adbfd"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -17,6 +17,9 @@ export class Wallet {
     @Column()
     birthdate: string;
 
+    @Column()
+    isDeleted: boolean;
+
     @CreateDateColumn()
     createdAt: Date;
 
@@ -29,6 +32,7 @@ export class Wallet {
     constructor() {
         if (!this.id) {
             this.id = randomUUID();
+            this.isDeleted = false;
             this.createdAt = new Date();
             this.updatedAt = new Date();
         }

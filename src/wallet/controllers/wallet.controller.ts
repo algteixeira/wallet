@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Query, HttpCode, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Query, HttpCode, Put, ParseUUIDPipe } from '@nestjs/common';
 import { serializeGetById } from 'src/utils/serialize/wallet';
 import { WalletService } from '../services/wallet.service';
 import { CreateWalletDto } from '../dto/create-wallet.dto';
@@ -6,7 +6,9 @@ import { UpdateWalletDto } from '../dto/update-wallet.dto';
 import { CreateTransactionDto } from '../dto/create-transaction.dto';
 import { GetTransactionDto } from '../dto/get-transaction.dto';
 
-@Controller('wallet')
+const prefix = 'api/v1/';
+
+@Controller(`${prefix}wallet`)
 export class WalletController {
     constructor(private readonly walletService: WalletService) {}
 
@@ -17,13 +19,16 @@ export class WalletController {
     }
 
     @Post(':id/transaction')
-    async createTransaction(@Param('id') id: string, @Body() createTransactionDto: CreateTransactionDto) {
+    async createTransaction(
+        @Param('id', ParseUUIDPipe) id: string,
+        @Body() createTransactionDto: CreateTransactionDto
+    ) {
         const result = await this.walletService.createTransaction(id, createTransactionDto);
         return result;
     }
 
     @Get(':id/transaction')
-    async getTransactions(@Param('id') id: string, @Query() getTransactionDto: GetTransactionDto) {
+    async getTransactions(@Param('id', ParseUUIDPipe) id: string, @Query() getTransactionDto: GetTransactionDto) {
         const result = await this.walletService.getTransactions(id, getTransactionDto);
         return result;
     }
@@ -35,7 +40,7 @@ export class WalletController {
     }
 
     @Get(':id')
-    async findOne(@Param('id') id: string) {
+    async findOne(@Param('id', ParseUUIDPipe) id: string) {
         try {
             const result = await this.walletService.findOne(id);
             return serializeGetById(result);
@@ -45,14 +50,14 @@ export class WalletController {
     }
 
     @Put(':id')
-    async update(@Param('id') id: string, @Body() updateWalletDto: UpdateWalletDto[]) {
+    async update(@Param('id', ParseUUIDPipe) id: string, @Body() updateWalletDto: UpdateWalletDto[]) {
         const result = await this.walletService.update(id, updateWalletDto);
         return result;
     }
 
     @Delete(':id')
     @HttpCode(204)
-    async remove(@Param('id') id: string) {
+    async remove(@Param('id', ParseUUIDPipe) id: string) {
         const result = await this.walletService.remove(id);
         return result;
     }

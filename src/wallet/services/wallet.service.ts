@@ -1,5 +1,3 @@
-/* eslint-disable prettier/prettier */
-/* eslint-disable spaced-comment */
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { idRegex } from 'src/utils/regex';
@@ -35,8 +33,9 @@ export class WalletService {
 
     async findAll(queries) {
         ValidateQueries(queries);
-        const allWallets = this.walletRepo
+        const wallets = this.walletRepo
             .createQueryBuilder('wallet')
+            .where('wallet.isDeleted = :bool', { bool: false })
             .leftJoinAndSelect('wallet.coins', 'coin')
             .leftJoinAndSelect('coin.transactions', 'transaction');
         Object.keys(queries).forEach((query) => {
@@ -46,21 +45,18 @@ export class WalletService {
                 .leftJoin('wallet.coins', 'coins')
                 .leftJoin('coins.transactions', 'transactions');
             subquery.andWhere(`${query} = :${query}`);
-            allWallets.setParameter(`${query}`, queries[query]);
-            allWallets.andWhere(`wallet.id  in (${subquery.getQuery()})`);
-            allWallets.setParameters(subquery.getParameters());
-          });
-        const result = await allWallets.getMany();
+            wallets.setParameter(`${query}`, queries[query]);
+            wallets.andWhere(`wallet.id  in (${subquery.getQuery()})`);
+            wallets.setParameters(subquery.getParameters());
+        });
+        const result = await wallets.getMany();
         const serializedResult = serializeWallets({ wallets: result });
         return serializedResult;
     }
 
     async findOne(id: string) {
-        if (!idRegex(id)) {
-            throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
-        }
         const result = await this.walletRepo.findOne(
-            { id },
+            { id, isDeleted: false },
             {
                 relations: ['coins']
             }
@@ -72,10 +68,7 @@ export class WalletService {
     }
 
     async update(id: string, updateWalletDto: UpdateWalletDto[]) {
-        if (!idRegex(id)) {
-            throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
-        }
-        const wallet = await this.walletRepo.findOne({ id: id });
+        const wallet = await this.walletRepo.findOne({ id, isDeleted: false });
         if (!wallet) {
             throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
         }
@@ -89,13 +82,12 @@ export class WalletService {
     }
 
     async remove(id: string) {
-        if (!idRegex(id)) {
-            throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
-        }
-        const result = await this.walletRepo.delete(id);
-        if (result.affected === 0) {
+        const check = await this.walletRepo.findOne({ id, isDeleted: false });
+        if (!check) {
             throw new HttpException('Wallet not found', HttpStatus.NOT_FOUND);
         }
+        check.isDeleted = true;
+        await this.walletRepo.save(check);
         return {};
     }
 
@@ -110,12 +102,14 @@ export class WalletService {
     }
 
     async getTransactions(id, getTransactionDto) {
-        await this.validateWallets({ id });
+        const result = await this.walletRepo.findOne({ id });
+        if (!result) {
+            throw new HttpException(`There's no wallet with id: ${id}`, HttpStatus.NOT_FOUND);
+        }
         const coins = await this.coinRepo.find({ wallet: id });
         const transactions = [];
         for (let i = 0; i < coins.length; i++) {
-            if (Object.keys(getTransactionDto).length !== 0
-             && coins[i].coin !== getTransactionDto.coin) continue;
+            if (Object.keys(getTransactionDto).length !== 0 && coins[i].coin !== getTransactionDto.coin) continue;
             transactions.push(serializeGetTransactions(coins[i]));
         }
         return transactions;
@@ -124,10 +118,7 @@ export class WalletService {
     async validateWallets(payload) {
         const alreadyHave = [];
         for (const id in payload) {
-            if (!idRegex(payload[id])) {
-                throw new HttpException(`Invalid ID format for ${payload[id]}`, HttpStatus.BAD_REQUEST);
-            }
-            const result = await this.walletRepo.findOne({ id: payload[id] });
+            const result = await this.walletRepo.findOne({ id: payload[id], isDeleted: false });
             if (!result) {
                 throw new HttpException(`There's no wallet with id: ${payload[id]}`, HttpStatus.NOT_FOUND);
             }

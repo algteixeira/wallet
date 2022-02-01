@@ -1,1 +1,1 @@
-export const Queries = ['name', 'cpf', 'birthdate', 'createdAt', 'updatedAt', 'limit', 'page'];
+export const Queries = ['name', 'cpf', 'birthdate', 'createdAt', 'updatedAt', 'limit', 'page', 'coin'];

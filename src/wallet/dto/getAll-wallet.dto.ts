@@ -22,4 +22,7 @@ export class GetAllWalletDto {
     @IsOptional()
     @Min(1)
     page: number;
+
+    @IsOptional()
+    coin: string;
 }

@@ -42,8 +42,8 @@ const serializeGetById = ({ id, createdAt, updatedAt, name, cpf, birthdate, coin
     updatedAt
 });
 
-const serializeWallets = ({ wallets, total }) => ({
-    wallet: wallets.map(serializeGetAll)
+const serializeWallets = ({ wallets }) => ({
+    wallets: wallets.map(serializeGetAll)
 });
 
 const serializeGetTransactions = ({ id, coin, fullname, amount, transactions }) => ({

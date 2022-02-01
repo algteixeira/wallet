@@ -4,6 +4,7 @@ import { WalletService } from '../services/wallet.service';
 import { CreateWalletDto } from '../dto/create-wallet.dto';
 import { UpdateWalletDto } from '../dto/update-wallet.dto';
 import { CreateTransactionDto } from '../dto/create-transaction.dto';
+import { GetTransactionDto } from '../dto/get-transaction.dto';
 
 @Controller('wallet')
 export class WalletController {
@@ -22,8 +23,8 @@ export class WalletController {
     }
 
     @Get(':id/transaction')
-    async getTransactions(@Param('id') id: string) {
-        const result = await this.walletService.getTransactions(id);
+    async getTransactions(@Param('id') id: string, @Query() getTransactionDto: GetTransactionDto) {
+        const result = await this.walletService.getTransactions(id, getTransactionDto);
         return result;
     }
 

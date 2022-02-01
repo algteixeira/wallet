@@ -1,3 +1,5 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable spaced-comment */
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { idRegex } from 'src/utils/regex';
@@ -33,20 +35,23 @@ export class WalletService {
 
     async findAll(queries) {
         ValidateQueries(queries);
-        let { limit, page } = queries;
-        delete queries.limit;
-        delete queries.page;
-        limit = limit || 10;
-        page = page || 1;
-        const skip = (page - 1) * limit;
-
-        const result = await this.walletRepo.findAndCount({
-            where: queries,
-            take: limit,
-            skip: skip,
-            relations: ['coins']
-        });
-        const serializedResult = serializeWallets({ wallets: result['0'], total: result['1'] });
+        const allWallets = this.walletRepo
+            .createQueryBuilder('wallet')
+            .leftJoinAndSelect('wallet.coins', 'coin')
+            .leftJoinAndSelect('coin.transactions', 'transaction');
+        Object.keys(queries).forEach((query) => {
+            const subquery = this.walletRepo
+                .createQueryBuilder('wallet')
+                .select('wallet.id')
+                .leftJoin('wallet.coins', 'coins')
+                .leftJoin('coins.transactions', 'transactions');
+            subquery.andWhere(`${query} = :${query}`);
+            allWallets.setParameter(`${query}`, queries[query]);
+            allWallets.andWhere(`wallet.id  in (${subquery.getQuery()})`);
+            allWallets.setParameters(subquery.getParameters());
+          });
+        const result = await allWallets.getMany();
+        const serializedResult = serializeWallets({ wallets: result });
         return serializedResult;
     }
 
@@ -96,7 +101,7 @@ export class WalletService {
 
     async createTransaction(id, createTransactionDto) {
         const { receiverAddress } = createTransactionDto;
-        await this.checkWalletProblems({ id, receiverAddress });
+        await this.validateWallets({ id, receiverAddress });
         await this.coinService.transactionHandler(id, createTransactionDto);
         const sender = await this.walletRepo.findOne({ id });
         await this.updateWallet(sender);
@@ -104,29 +109,32 @@ export class WalletService {
         return await this.updateWallet(receiver);
     }
 
-    async getTransactions(id) {
-        await this.checkWalletProblems({ id });
+    async getTransactions(id, getTransactionDto) {
+        await this.validateWallets({ id });
         const coins = await this.coinRepo.find({ wallet: id });
-        const result = [];
+        const transactions = [];
         for (let i = 0; i < coins.length; i++) {
-            result.push(serializeGetTransactions(coins[i]));
+            if (Object.keys(getTransactionDto).length !== 0
+             && coins[i].coin !== getTransactionDto.coin) continue;
+            transactions.push(serializeGetTransactions(coins[i]));
         }
-        return result;
+        return transactions;
     }
 
-    async checkWalletProblems(payload) {
-        for (let i = 0; i < Object.values(payload).length; i++) {
-            const id = String(Object.values(payload)[i]);
-            if (!idRegex(id)) {
-                throw new HttpException(`Invalid ID format for ${id}`, HttpStatus.BAD_REQUEST);
+    async validateWallets(payload) {
+        const alreadyHave = [];
+        for (const id in payload) {
+            if (!idRegex(payload[id])) {
+                throw new HttpException(`Invalid ID format for ${payload[id]}`, HttpStatus.BAD_REQUEST);
             }
-            const result = await this.walletRepo.findOne({ id });
+            const result = await this.walletRepo.findOne({ id: payload[id] });
             if (!result) {
-                throw new HttpException(`There's no wallet with id: ${id}`, HttpStatus.NOT_FOUND);
+                throw new HttpException(`There's no wallet with id: ${payload[id]}`, HttpStatus.NOT_FOUND);
             }
-        }
-        if (Object.values(payload)[0] === Object.values(payload)[1]) {
-            throw new HttpException(`Unable to transfer funds to your own wallet`, HttpStatus.BAD_REQUEST);
+            if (alreadyHave.indexOf(payload[id]) !== -1) {
+                throw new HttpException(`Unable to transfer funds to your own wallet`, HttpStatus.BAD_REQUEST);
+            }
+            alreadyHave.push(payload[id]);
         }
     }
 }

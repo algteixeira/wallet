@@ -103,6 +103,7 @@ export class WalletService {
   }
 
   async createTransaction(id, createTransactionDto) {
+    const { receiverAddress } = createTransactionDto;
     await this.validateWallets({
       id,
       receiverAddress: createTransactionDto.receiverAddress,
@@ -111,7 +112,7 @@ export class WalletService {
     const sender = await this.walletRepo.findOne({ id });
     await this.updateWallet(sender);
     const receiver = await this.walletRepo.findOne({
-      id: createTransactionDto.receiverAddress,
+      id: receiverAddress,
     });
     return await this.updateWallet(receiver);
   }

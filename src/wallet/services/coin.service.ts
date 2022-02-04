@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { UpdateWalletDto } from "../dto/update-wallet.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Coin } from "../entities/coin.entity";
 import { Repository } from "typeorm";
@@ -36,35 +35,6 @@ export class CoinService {
         HttpStatus.BAD_REQUEST
       );
     }
-  }
-
-  async createTransaction({
-    coin,
-    value,
-    currentCotation,
-    id,
-    receiverAddress,
-    coinName,
-  }) {
-    const receiver = await this.walletRepo.findOne({ id: receiverAddress });
-    const wallet = await this.walletRepo.findOne({ id });
-    await this.senderHandler({
-      coin,
-      wallet,
-      transferValue: value * currentCotation,
-      currentCotation,
-      receiverAddress,
-      id,
-    });
-    return await this.receiverHandler({
-      coin,
-      receiver,
-      coinName,
-      transferValue: value * currentCotation,
-      currentCotation,
-      receiverAddress,
-      id,
-    });
   }
 
   async senderHandler({
@@ -104,13 +74,7 @@ export class CoinService {
         coin: coin,
         wallet: receiver,
         fullname: coinName,
-        amount: transferValue,
-      });
-      await this.transactionService.createTransaction(currentCotation, {
-        sendTo: receiverAddress,
-        receiveFrom: id,
-        coin: result,
-        value: transferValue,
+        amount: 0,
       });
     }
     result.amount = parseFloat(result.amount) + transferValue;
@@ -129,32 +93,42 @@ export class CoinService {
     const result = await this.requestCoins([createTransactionDto]);
     const index =
       createTransactionDto.currentCoin + createTransactionDto.quoteTo;
-    await this.createTransaction({
+    const receiver = await this.walletRepo.findOne({ id: receiverAddress });
+    const wallet = await this.walletRepo.findOne({ id });
+    await this.senderHandler({
       coin: createTransactionDto.quoteTo,
-      value: createTransactionDto.value,
+      wallet,
+      transferValue: createTransactionDto.value * result[0][index].high,
       currentCotation: result[0][index].high,
-      id,
       receiverAddress,
+      id,
+    });
+    return await this.receiverHandler({
+      coin: createTransactionDto.quoteTo,
+      receiver,
       coinName: result[0][index].name.split(/[/]/)[1],
+      transferValue: createTransactionDto.value * result[0][index].high,
+      currentCotation: result[0][index].high,
+      receiverAddress,
+      id,
     });
   }
 
   async insertionHandler(wallet, operate) {
     const { updateWalletDto, apiReturn } = operate;
     const index = updateWalletDto.currentCoin + updateWalletDto.quoteTo;
-    const existentCoin = await this.coinRepo.findOne({
+    let existentCoin = await this.coinRepo.findOne({
       coin: updateWalletDto.quoteTo,
       wallet,
     });
     if (!existentCoin)
-      return await this.setNewCoinValue({
-        value: parseFloat(updateWalletDto.value),
-        apiPrice: parseFloat(apiReturn[index].high),
-        quoteTo: updateWalletDto.quoteTo,
-        fullname: apiReturn[index].name.split(/[/]/)[1],
+      existentCoin = await this.coinRepo.create({
         wallet,
+        amount: 0,
+        fullname: apiReturn[index].name.split(/[/]/)[1],
+        coin: updateWalletDto.quoteTo,
       });
-    return await this.setExistentCoinValue({
+    return await this.setCoinValue({
       existentCoin,
       value: parseFloat(updateWalletDto.value),
       apiPrice: parseFloat(apiReturn[index].high),
@@ -162,55 +136,10 @@ export class CoinService {
     });
   }
 
-  private async setNewCoinValue({
-    value,
-    apiPrice,
-    quoteTo,
-    fullname,
-    wallet,
-  }) {
-    if (value < 0) {
-      throw new HttpException(
-        `This wallet don't have this currency yet. Unable to withdraw funds`,
-        HttpStatus.BAD_REQUEST
-      );
-    }
-    const newCoin = await this.coinRepo.create({
-      coin: quoteTo,
-      fullname,
-      amount: value * apiPrice,
-      wallet,
-    });
-    await this.coinRepo.save(newCoin);
-    return this.transactionService.createTransaction(apiPrice, {
-      sendTo: wallet.id,
-      receiveFrom: wallet.id,
-      coin: newCoin,
-      value: value * apiPrice,
-    });
-  }
-
-  private async setExistentCoinValue({
-    existentCoin,
-    value,
-    apiPrice,
-    wallet,
-  }) {
-    if (value < 0) {
-      existentCoin.amount =
-        parseFloat(existentCoin.amount) - value * -1 * apiPrice;
-
-      if (existentCoin.amount < 0)
-        throw new HttpException(`Insuficient funds`, HttpStatus.BAD_REQUEST);
-      await this.coinRepo.save(existentCoin);
-      return await this.transactionService.createTransaction(apiPrice, {
-        sendTo: wallet.id,
-        receiveFrom: wallet.id,
-        coin: existentCoin,
-        value: value * -1 * apiPrice,
-      });
-    }
+  private async setCoinValue({ existentCoin, value, apiPrice, wallet }) {
     existentCoin.amount = parseFloat(existentCoin.amount) + value * apiPrice;
+    if (existentCoin.amount < 0)
+      throw new HttpException(`Insuficient funds`, HttpStatus.BAD_REQUEST);
     await this.coinRepo.save(existentCoin);
     return await this.transactionService.createTransaction(apiPrice, {
       sendTo: wallet.id,
